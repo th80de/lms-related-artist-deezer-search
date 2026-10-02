@@ -1,0 +1,15 @@
+PLUGIN_RELATEDARTISTDEEZERSEARCH
+	DE	Deezer-Suche für ähnliche Künstler
+	EN	Deezer search for related artists
+
+PLUGIN_RELATEDARTISTDEEZERSEARCH_DESC
+	DE	Ergänzt bei ähnlichen Künstlern aus Music and Artist Information eine Deezer-Interpretensuche und bezeichnet die lokale Suche eindeutig.
+	EN	Adds a Deezer artist search to related artists from Music and Artist Information and clearly labels the local-library search.
+
+PLUGIN_RELATEDARTISTDEEZERSEARCH_DEEZER_ARTIST
+	DE	Deezer: Interpret suchen
+	EN	Deezer: Search artist
+
+PLUGIN_RELATEDARTISTDEEZERSEARCH_LOCAL_LIBRARY
+	DE	Lokale Bibliothek durchsuchen
+	EN	Search local library

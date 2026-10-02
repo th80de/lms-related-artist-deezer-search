@@ -1,0 +1,17 @@
+<?xml version='1.0' standalone='yes'?>
+<extensions>
+  <plugins>
+    <plugin version="0.1.0" minTarget="8.3" maxTarget="*" name="RelatedArtistDeezerSearch">
+      <creator>Thomas Hoppe</creator>
+      <desc lang="DE">Ergänzt bei ähnlichen Künstlern aus Music and Artist Information eine Deezer-Interpretensuche und eine eindeutig benannte lokale Suche.</desc>
+      <desc lang="EN">Adds a Deezer artist search and a clearly named local search to related artists from Music and Artist Information.</desc>
+      <title lang="DE">Deezer-Suche für ähnliche Künstler</title>
+      <title lang="EN">Deezer Search for Related Artists</title>
+      <url>https://github.com/th80de/lms-related-artist-deezer-search/releases/download/0.1.0/RelatedArtistDeezerSearch-0.1.0.zip</url>
+      <sha>e5fe092f3da8f0f028c0ec386d344948d7ff0a02</sha>
+    </plugin>
+  </plugins>
+  <details>
+    <title lang="EN">Related Artist Deezer Search</title>
+  </details>
+</extensions>
