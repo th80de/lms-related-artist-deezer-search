@@ -42,7 +42,7 @@ BEGIN {
 
 require './Plugin.pm';
 
-Plugins::RelatedArtistDeezerSearch::Plugin->postinitPlugin();
+Plugins::RelatedArtistDeezerSearch::Plugin->initPlugin();
 
 is($Slim::Menu::GlobalSearch::registrations, 0, 'does not register when Deezer is disabled');
 

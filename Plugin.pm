@@ -19,11 +19,6 @@ sub initPlugin {
 	my $class = shift;
 
 	$class->SUPER::initPlugin(@_);
-}
-
-sub postinitPlugin {
-
-	my $class = shift;
 
 	return if $registered;
 
@@ -32,15 +27,11 @@ sub postinitPlugin {
 		return;
 	}
 
-	if ( !Plugins::Deezer::Plugin->can('search') ) {
-		$log->warn('The Deezer search API is unavailable; no global-search integration was registered.');
-		return;
-	}
-
 	# Material Skin follows links in MAI's “Ähnliche Interpreten” section with
 	# nowplayingSearch(). That opens Slim::Menu::GlobalSearch directly, bypassing
-	# MAI's getArtistMenu(). Registering here places Deezer beside Bandcamp and
-	# BBC Sounds in that exact “Suche auf …” section.
+	# MAI's getArtistMenu(). GlobalSearch providers must be registered from
+	# initPlugin(), as done by Bandcamp and Qobuz; postinitPlugin() is too late
+	# for the provider list used by LMS 9.1.
 	Slim::Menu::GlobalSearch->registerInfoProvider(
 		relatedArtistDeezerSearch => (
 			after => 'bottom',
@@ -59,19 +50,37 @@ sub searchHandler {
 	my $query = $tags && $tags->{search};
 	return unless defined $query && length $query;
 
-	my $deezer_search = Plugins::Deezer::Plugin->can('search');
-	return unless $deezer_search;
-
-	return {
-		name        => cstring($client, 'PLUGIN_RELATEDARTISTDEEZERSEARCH_DEEZER'),
-		type        => 'link',
-		url         => $deezer_search,
-		passthrough => [ {
-			type   => 'artist',
-			query  => $query,
-			strict => 'on',
+	# A GlobalSearch provider represents a service. Returning an array with a
+	# named service makes Material Skin add it to “Suche auf …”, consistent with
+	# Bandcamp and BBC Sounds. The only child is a strict Deezer artist search.
+	return [ {
+		name  => cstring($client, 'PLUGIN_RELATEDARTISTDEEZERSEARCH_DEEZER'),
+		items => [ {
+			name        => cstring($client, 'PLUGIN_RELATEDARTISTDEEZERSEARCH_SEARCH_ARTIST'),
+			type        => 'link',
+			url         => \&searchArtist,
+			passthrough => [ { query => $query } ],
 		} ],
-	};
+	} ];
+}
+
+sub searchArtist {
+
+	my ($client, $cb, $args, $params) = @_;
+
+	return $cb->({ items => [] }) unless Plugins::Deezer::Plugin->can('search');
+
+	$args   ||= {};
+	$params ||= {};
+
+	# Deezer's existing handler reads query/type/strict from $params, not from
+	# the menu item's passthrough hash. Copy the original artist spelling across
+	# unchanged and force its narrowest search mode.
+	$params->{query}  = $args->{query} if defined $args->{query};
+	$params->{type}   = 'artist';
+	$params->{strict} = 'on';
+
+	return Plugins::Deezer::Plugin::search($client, $cb, $args, $params);
 }
 
 1;

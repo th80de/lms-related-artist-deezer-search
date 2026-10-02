@@ -1,14 +1,14 @@
 <?xml version='1.0' standalone='yes'?>
 <extensions>
   <plugins>
-    <plugin version="0.2.0" minTarget="8.3" maxTarget="*" name="RelatedArtistDeezerSearch">
+    <plugin version="0.2.1" minTarget="8.3" maxTarget="*" name="RelatedArtistDeezerSearch">
       <creator>Thomas Hoppe</creator>
       <desc lang="DE">Fügt Deezer in die globale LMS-Suche ein, die Material Skin für ähnliche Künstler verwendet.</desc>
       <desc lang="EN">Adds Deezer to the LMS global search used by Material Skin for related artists.</desc>
       <title lang="DE">Deezer-Suche für ähnliche Künstler</title>
       <title lang="EN">Deezer Search for Related Artists</title>
-      <url>https://github.com/th80de/lms-related-artist-deezer-search/releases/download/0.2.0/RelatedArtistDeezerSearch-0.2.0.zip</url>
-      <sha>c2d2a874d11a751a2d5d2c75dc503b37da10188b</sha>
+      <url>https://github.com/th80de/lms-related-artist-deezer-search/releases/download/0.2.1/RelatedArtistDeezerSearch-0.2.1.zip</url>
+      <sha>0262d8bb5e20840029ccb2b7410b4888f1a15933</sha>
     </plugin>
   </plugins>
   <details>

@@ -38,15 +38,20 @@ BEGIN {
 		no strict 'refs';
 		*{caller() . '::cstring'} = \&cstring;
 	}
-	sub cstring { return $_[1] eq 'PLUGIN_RELATEDARTISTDEEZERSEARCH_DEEZER' ? 'Deezer' : $_[1] }
+	sub cstring {
+		return 'Deezer' if $_[1] eq 'PLUGIN_RELATEDARTISTDEEZERSEARCH_DEEZER';
+		return 'Interpret suchen' if $_[1] eq 'PLUGIN_RELATEDARTISTDEEZERSEARCH_SEARCH_ARTIST';
+		return $_[1];
+	}
 
 	package Plugins::Deezer::Plugin;
-	sub search { return }
+	our @search_args;
+	sub search { @search_args = @_; return }
 }
 
 require './Plugin.pm';
 
-Plugins::RelatedArtistDeezerSearch::Plugin->postinitPlugin();
+Plugins::RelatedArtistDeezerSearch::Plugin->initPlugin();
 
 ok($Slim::Menu::GlobalSearch::providers{relatedArtistDeezerSearch}, 'registers a global search provider');
 is($Slim::Menu::GlobalSearch::providers{relatedArtistDeezerSearch}{after}, 'bottom', 'adds after existing search providers');
@@ -56,11 +61,15 @@ my $result = $Slim::Menu::GlobalSearch::providers{relatedArtistDeezerSearch}{fun
 	{ search => "Bjo\N{LATIN SMALL LETTER O WITH DIAERESIS}rk & Sigur R\N{LATIN SMALL LETTER O WITH ACUTE}s" },
 );
 
-is($result->{name}, 'Deezer', 'renders as the Deezer service in global search');
-is($result->{type}, 'link', 'renders as a directly selectable service');
-is($result->{passthrough}[0]{type}, 'artist', 'uses Deezer artist search');
-is($result->{passthrough}[0]{query}, "Bjo\N{LATIN SMALL LETTER O WITH DIAERESIS}rk & Sigur R\N{LATIN SMALL LETTER O WITH ACUTE}s", 'preserves artist characters exactly');
-is($result->{passthrough}[0]{strict}, 'on', 'uses strict Deezer matching');
+is(ref $result, 'ARRAY', 'returns a service list for global search');
+is($result->[0]{name}, 'Deezer', 'renders as the Deezer service in global search');
+is($result->[0]{items}[0]{name}, 'Interpret suchen', 'offers an artist-specific Deezer action');
+is($result->[0]{items}[0]{passthrough}[0]{query}, "Bjo\N{LATIN SMALL LETTER O WITH DIAERESIS}rk & Sigur R\N{LATIN SMALL LETTER O WITH ACUTE}s", 'preserves artist characters exactly');
+
+$result->[0]{items}[0]{url}->(undef, sub {}, { query => $result->[0]{items}[0]{passthrough}[0]{query} }, {});
+is($Plugins::Deezer::Plugin::search_args[3]{query}, "Bjo\N{LATIN SMALL LETTER O WITH DIAERESIS}rk & Sigur R\N{LATIN SMALL LETTER O WITH ACUTE}s", 'passes the unmodified artist name to Deezer');
+is($Plugins::Deezer::Plugin::search_args[3]{type}, 'artist', 'uses Deezer artist search');
+is($Plugins::Deezer::Plugin::search_args[3]{strict}, 'on', 'uses strict Deezer matching');
 ok(!defined $Slim::Menu::GlobalSearch::providers{relatedArtistDeezerSearch}{func}->(undef, { search => '' }), 'does not add an empty search item');
 
 done_testing();
