@@ -3,7 +3,7 @@
 <extension>
 	<name>PLUGIN_RELATEDARTISTDEEZERSEARCH</name>
 	<module>Plugins::RelatedArtistDeezerSearch::Plugin</module>
-	<version>0.1.0</version>
+	<version>0.2.0</version>
 	<defaultState>enabled</defaultState>
 	<description>PLUGIN_RELATEDARTISTDEEZERSEARCH_DESC</description>
 	<category>musicservices</category>

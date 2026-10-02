@@ -1,7 +1,6 @@
 use strict;
 use warnings;
 
-use Scalar::Util qw(refaddr);
 use Test::More;
 
 BEGIN {
@@ -9,6 +8,11 @@ BEGIN {
 	package Slim::Plugin::Base;
 	our $VERSION = 1;
 	sub initPlugin { return }
+
+	$INC{'Slim/Menu/GlobalSearch.pm'} = __FILE__;
+	package Slim::Menu::GlobalSearch;
+	our $registrations = 0;
+	sub registerInfoProvider { $registrations++ }
 
 	$INC{'Slim/Utils/Log.pm'} = __FILE__;
 	package Slim::Utils::Log;
@@ -32,19 +36,14 @@ BEGIN {
 	package Slim::Utils::Strings;
 	sub import { return }
 
-	package Plugins::MusicArtistInfo::ArtistInfo;
-	sub getArtistMenu { return [] }
-
 	package Plugins::Deezer::Plugin;
 	sub search { return }
 }
 
 require './Plugin.pm';
 
-my $before = Plugins::MusicArtistInfo::ArtistInfo->can('getArtistMenu');
 Plugins::RelatedArtistDeezerSearch::Plugin->postinitPlugin();
-my $after = Plugins::MusicArtistInfo::ArtistInfo->can('getArtistMenu');
 
-is(refaddr($after), refaddr($before), 'does not wrap MAI when Deezer is disabled');
+is($Slim::Menu::GlobalSearch::registrations, 0, 'does not register when Deezer is disabled');
 
 done_testing();

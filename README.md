@@ -1,26 +1,20 @@
 # Deezer-Suche für ähnliche Künstler
 
 Ein eigenständiges Plugin für Lyrion/Logitech Media Server (LMS). Es ergänzt
-den Menüpunkt **Ähnliche Künstler** des Plugins **Music and Artist
-Information** um eine Deezer-Interpretensuche.
+die globale Suche, die Material Skin beim Antippen eines ähnlichen Künstlers
+aus **Music and Artist Information** öffnet, um Deezer.
 
 ## Verhalten
 
-Beim Öffnen eines ähnlichen Künstlers wird das vorhandene Menü unverändert
-übernommen und ergänzt um:
-
-- **Deezer: Interpret suchen** – ruft im bereits eingerichteten Deezer-Plugin
-  eine strikte Interpretensuche mit dem angeklickten Namen auf.
-- **Lokale Bibliothek durchsuchen** – der vorhandene MAI-"Browse"-Eintrag;
-  er startet die LMS-Suche nach demselben Künstlernamen.
-
-Bandcamp, BBC Sounds und weitere Einträge anderer Plugins werden weder entfernt
-noch verändert.
+Material Skin löst für einen ähnlichen Künstler die globale LMS-Suche aus. Die
+lokalen Treffer werden dabei sofort eingeblendet; unter **Suche auf ...**
+werden zusätzliche Dienste angeboten. Dieses Plugin ergänzt dort **Deezer**
+neben Bandcamp und BBC Sounds. Ein Klick darauf startet eine strikte
+Deezer-Interpretensuche mit dem unveränderten Künstlernamen.
 
 ## Voraussetzungen
 
 - LMS 8.3 oder neuer
-- aktiviertes Plugin [Music and Artist Information](https://github.com/michaelherger/MusicArtistInfo)
 - aktiviertes und mit Deezer angemeldetes [Deezer-Plugin](https://github.com/philippe44/lms-deezer)
 
 Das Plugin verwendet keine Deezer-Zugangsdaten und enthält keine Einstellungen.
@@ -32,8 +26,8 @@ Das Plugin verwendet keine Deezer-Zugangsdaten und enthält keine Einstellungen.
    Plugins → Zusätzliche Repositories** hinzu.
 2. Aktiviere „Deezer-Suche für ähnliche Künstler“ und starte LMS neu, falls
    LMS dazu auffordert.
-3. Öffne in Material Skin einen ähnlichen Künstler. „Deezer: Interpret suchen“
-   und „Lokale Bibliothek durchsuchen“ müssen sichtbar sein.
+3. Öffne in Material Skin einen ähnlichen Künstler. Unter **Suche auf ...**
+   muss neben Bandcamp und BBC Sounds der Eintrag „Deezer“ erscheinen.
 
 ## Release erstellen
 
@@ -45,21 +39,20 @@ Cache verwendet.
 
 ## Kompatibilität
 
-Music and Artist Information stellt für dieses Untermenü keinen öffentlichen
-Erweiterungshook bereit. Das Plugin umschließt daher ausschließlich dessen
-`getArtistMenu`-Methode nach dem LMS-Start. Fehlt eine benötigte Methode oder
-ist eines der beiden Plugins deaktiviert, wird nichts verändert und LMS bleibt
-nutzbar. Nach einem Update von MAI sollte der manuelle Smoke-Test unten
-wiederholt werden.
+Material Skin verwendet für ähnliche Künstler nicht MAIs `getArtistMenu`,
+sondern `Slim::Menu::GlobalSearch`. Das Plugin registriert dort einen normalen
+Suchanbieter. Fehlt Deezer oder seine Suchmethode, wird nichts registriert und
+LMS bleibt nutzbar.
 
 ## Manueller Smoke-Test
 
 1. Wähle in Material Skin einen bekannten ähnlichen Künstler mit Sonderzeichen
    (zum Beispiel „Björk“).
-2. Prüfe, dass Deezer die Interpreten-Suche mit genau diesem Namen öffnet.
-3. Prüfe die lokale Suche und die weiterhin verfügbaren externen Einträge.
-4. Deaktiviere testweise Deezer oder MAI und starte LMS neu: Es darf kein
-   fehlerhaftes Künstler-Menü entstehen.
+2. Prüfe, dass unter „Suche auf ...“ Deezer neben Bandcamp und BBC Sounds
+   erscheint und die Interpreten-Suche mit genau diesem Namen öffnet.
+3. Prüfe, dass die lokale Sofortsuche unverändert bleibt.
+4. Deaktiviere testweise Deezer und starte LMS neu: Es darf kein fehlerhafter
+   Suchanbieter entstehen.
 
 ## Tests
 

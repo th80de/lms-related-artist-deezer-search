@@ -5,15 +5,14 @@ use warnings;
 
 use base qw(Slim::Plugin::Base);
 
-use Scalar::Util qw(refaddr);
+use Slim::Menu::GlobalSearch;
 use Slim::Utils::Log;
 use Slim::Utils::PluginManager;
 use Slim::Utils::Strings qw(cstring);
 
 my $log = logger('plugin.relatedartistdeezersearch');
 
-my $installed;
-my $original_get_artist_menu;
+my $registered;
 
 sub initPlugin {
 
@@ -26,118 +25,53 @@ sub postinitPlugin {
 
 	my $class = shift;
 
-	return if $installed;
-
-	if ( !Slim::Utils::PluginManager->isEnabled('Plugins::MusicArtistInfo::Plugin') ) {
-		$log->warn('Music and Artist Information is not enabled; no menu integration was installed.');
-		return;
-	}
+	return if $registered;
 
 	if ( !Slim::Utils::PluginManager->isEnabled('Plugins::Deezer::Plugin') ) {
-		$log->warn('Deezer is not enabled; no menu integration was installed.');
+		$log->warn('Deezer is not enabled; no global-search integration was registered.');
 		return;
 	}
 
-	my $mai_class = 'Plugins::MusicArtistInfo::ArtistInfo';
-	my $deezer_class = 'Plugins::Deezer::Plugin';
-	my $original = $mai_class->can('getArtistMenu');
-	my $search   = $deezer_class->can('search');
-
-	if ( !$original || !$search ) {
-		$log->warn('Required Music and Artist Information or Deezer API is unavailable; no menu integration was installed.');
+	if ( !Plugins::Deezer::Plugin->can('search') ) {
+		$log->warn('The Deezer search API is unavailable; no global-search integration was registered.');
 		return;
 	}
 
-	$original_get_artist_menu = $original;
+	# Material Skin follows links in MAI's “Ähnliche Interpreten” section with
+	# nowplayingSearch(). That opens Slim::Menu::GlobalSearch directly, bypassing
+	# MAI's getArtistMenu(). Registering here places Deezer beside Bandcamp and
+	# BBC Sounds in that exact “Suche auf …” section.
+	Slim::Menu::GlobalSearch->registerInfoProvider(
+		relatedArtistDeezerSearch => (
+			after => 'bottom',
+			func  => \&searchHandler,
+		)
+	);
 
-	# MAI does not expose a hook for its related-artist submenu. Wrap only this
-	# function, preserving its signature and all items created by MAI or other
-	# installed services.
-	{
-		no strict 'refs';
-		no warnings 'redefine';
-		*{'Plugins::MusicArtistInfo::ArtistInfo::getArtistMenu'} = sub {
-		my ($client, $cb, $params, $args) = @_;
-
-		if ($cb) {
-			return $original_get_artist_menu->(
-				$client,
-				sub {
-					my $items = shift;
-					$class->_decorateMenu($client, $items, $params, $args);
-					$cb->($items);
-				},
-				$params,
-				$args,
-			);
-		}
-
-		my $items = $original_get_artist_menu->(@_);
-		return $class->_decorateMenu($client, $items, $params, $args);
-		};
-	}
-
-	$installed = 1;
-	$log->info('Installed Deezer related-artist menu integration.');
+	$registered = 1;
+	$log->info('Registered Deezer in LMS global search.');
 }
 
-sub _decorateMenu {
+sub searchHandler {
 
-	my ($class, $client, $items, $params, $args) = @_;
+	my ($client, $tags) = @_;
 
-	# LMS callbacks receive { items => [...] }, whereas direct calls return the
-	# array itself. Keep the original container for either calling convention.
-	my $menu_items = ref $items eq 'HASH' ? $items->{items} : $items;
-	return $items unless ref $menu_items eq 'ARRAY';
-
-	my $artist = $class->_artistName($params, $args);
-	return $items unless defined $artist && length $artist;
-
-	# The MAI "Browse" item is already the correct local-library search for
-	# related artists. Give it an explicit label instead of creating a duplicate.
-	my $local_search = Plugins::MusicArtistInfo::ArtistInfo->can('_getSearchItem');
-	if ($local_search) {
-		foreach my $item (@$menu_items) {
-			next unless ref $item eq 'HASH' && ref $item->{url} eq 'CODE';
-			next unless refaddr($item->{url}) == refaddr($local_search);
-			$item->{name} = cstring($client, 'PLUGIN_RELATEDARTISTDEEZERSEARCH_LOCAL_LIBRARY');
-		}
-	}
-
-	# Avoid adding a second entry if LMS rebuilds and reuses a menu object.
-	return $items if grep {
-		ref $_ eq 'HASH' && ($_->{id} || '') eq 'relatedArtistDeezerSearch'
-	} @$menu_items;
+	my $query = $tags && $tags->{search};
+	return unless defined $query && length $query;
 
 	my $deezer_search = Plugins::Deezer::Plugin->can('search');
-	return $items unless $deezer_search;
+	return unless $deezer_search;
 
-	unshift @$menu_items, {
-		id          => 'relatedArtistDeezerSearch',
-		name        => cstring($client, 'PLUGIN_RELATEDARTISTDEEZERSEARCH_DEEZER_ARTIST'),
+	return {
+		name        => cstring($client, 'PLUGIN_RELATEDARTISTDEEZERSEARCH_DEEZER'),
 		type        => 'link',
 		url         => $deezer_search,
 		passthrough => [ {
 			type   => 'artist',
-			query  => $artist,
+			query  => $query,
 			strict => 'on',
 		} ],
 	};
-
-	return $items;
-}
-
-sub _artistName {
-
-	my ($class, $params, $args) = @_;
-
-	for my $source ($args, $params) {
-		next unless ref $source eq 'HASH';
-		return $source->{artist} if defined $source->{artist} && length $source->{artist};
-		return $source->{name}   if defined $source->{name}   && length $source->{name};
-	}
-
-	return;
 }
 
 1;
